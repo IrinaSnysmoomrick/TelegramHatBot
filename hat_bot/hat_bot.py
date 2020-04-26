@@ -103,9 +103,9 @@ class HatBot:
         
     
 def main():
-    apihelper.proxy = {'https':'socks5h://svf:Railroadranger1@fedorov.cf:1080'} 
+    apihelper.proxy = {} 
     
-    bot = telebot.TeleBot('1099016441:AAHM0pvg9Oa6RyZ-P20gF98XljhgTzVEJMY')       
+    bot = telebot.TeleBot()       
     
     hat_game = HatBot()
             
