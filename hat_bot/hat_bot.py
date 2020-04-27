@@ -9,6 +9,7 @@ import telebot
 from telebot import apihelper
 from telebot import types
 import random
+import configparser
 
 
 class HatBot:
@@ -49,19 +50,32 @@ class HatBot:
         elif len(self.team_members) == 0:
             return(self.get_teams())
             
+        
     def get_teams(self):
         #self.member_cnt
         #посчитаем количество зарегистрированных участников
-        random.shuffle(self.members)
+        print(self.members)
+        # random.shuffle(self.members)
         cnt = len(self.members)
-        for i in range(0, cnt, self.member_cnt):
-            self.team_members[i+1] = self.members[i:i + self.member_cnt]
+        l = []
+        for i in range(0, cnt - 1, self.member_cnt):
+            print(l)
+            if cnt - i == self.member_cnt + 1:
+                l.append(self.members[i:i + self.member_cnt + 1])
+            else:
+                l.append(self.members[i:i + self.member_cnt])
+        print(l)
+        self.team_members = dict((i+1,j) for i, j in enumerate(l))
+        print(self.team_members)
+        self.team_members = dict((i+1,j) for i,j in enumerate(l))            
         s = ''
         for key, value in self.team_members.items():
             s += 'Команда ' + str(key) + ': ' + str(value) + '\n'
             self.teams[key] = 0
+        print(self.teams)
         return s        
-        
+       
+    
     def add_word(self, word):
         """Adding a new word into the word list"""
         if word in self.words:
@@ -102,16 +116,26 @@ class HatBot:
                 )
         
     
-def main():
-    apihelper.proxy = {} 
-    
-    bot = telebot.TeleBot()       
+def main():     
     
     hat_game = HatBot()
+    
+    config = configparser.ConfigParser()
+    config.sections()
+    BOT_CONFIG_FILE = 'bot.conf'
+    config.read(BOT_CONFIG_FILE)
+    TOKEN = config['DEFAULT']['TOKEN']
+    PROXY = config['DEFAULT']['PROXY_URL']
+    
+    apihelper.proxy = {'https': PROXY} 
+    
+    bot = telebot.TeleBot(TOKEN) 
             
     
     @bot.message_handler(content_types=['text'])
     def get_text_message(message):
+        if message.text == '/start':
+            bot.send_message(message.from_user.id, hat_game.get_help())
         if message.text == "/start_game": 
             bot.send_message(message.from_user.id, 'Поехали! Сколько человек будет в каждой команде?')
             bot.register_next_step_handler(message, get_members_cnt);
