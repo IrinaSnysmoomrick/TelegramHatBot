@@ -125,8 +125,11 @@ def main():
             team_size = int(message.text)
         except:
             bot.send_message(message.from_user.id, 'Цифрами, пожалуйста.');
-        game_number = game_container.start_new_game(team_size)
-        bot.send_message(message.from_user.id, f'Отлично! Игра номер {game_number}, по {team_size} участников в команде.', reply_markup=markupRegistration, parse_mode='markdown');
+        try:
+            game_number = game_container.start_new_game(team_size)
+            bot.send_message(message.from_user.id, f'Отлично! Игра номер {game_number}, по {team_size} участников в команде.', reply_markup=markupRegistration, parse_mode='markdown');
+        except:
+            bot.send_message(message.from_user.id, 'Неправильный порядок действий.', reply_markup=markupStartGame, parse_mode='markdown')
 
 
     def game_registration(message):
@@ -153,8 +156,11 @@ def main():
         bot.send_message(chat_id, 'Next')
 
     def put_word_method(message):
-        user_game = game_container.get_user_game(message.from_user.id)
-        bot.send_message(message.from_user.id, user_game.add_word(message.text), reply_markup=markupAfterRegistration, parse_mode='markdown')
+        try:
+            user_game = game_container.get_user_game(message.from_user.id)
+            bot.send_message(message.from_user.id, user_game.add_word(message.text), reply_markup=markupAfterRegistration, parse_mode='markdown')
+        except:
+            bot.send_message(message.from_user.id, 'Что-то пошло не так.', reply_markup=markupAfterRegistration, parse_mode='markdown')
 
     bot.polling(none_stop=True, interval=0)
 
