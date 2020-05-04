@@ -18,17 +18,20 @@ class HatGame:
         self.statuses = {1:'Старт', 2:'Раунд 1', 3:'Раунд 2', 4:'Раунд 3', 5:'Конец игры'}
         self.status = 1
 
-    def reg_member(self, user_name):
+    def reg_member(self, user_id, user_name):
         """Registration a user into game"""
-        if user_name in self.members:
-            raise ValueError('Участник уже добавлен в игру.')
+        for m in self.members:
+            if user_id in m.keys():
+                raise ValueError('Участник уже добавлен в игру.')
         else:
-            self.members.append(user_name)
+            self.members.append({user_id:user_name})
             return 'Участник добавлен в игру!'
 
     def start_new_round(self):
         """Start new rownd - exchange values from list of used words to word list"""
-        self.round_words = self.words
+        if len(self.words) == 0:
+            raise ValueError('Список слов для игры пуст.')
+        self.round_words = self.words.copy()
         if len(self.members) == 0:
             raise ValueError('Нет зарегистрированных участников игры.')
         elif self.status > 4:
@@ -56,7 +59,11 @@ class HatGame:
         self.team_members = dict((i + 1, j) for i, j in enumerate(l))
         s = ''
         for key, value in self.team_members.items():
-            s += 'Команда ' + str(key) + ': ' + str(value) + '\n'
+            s += 'Команда ' + str(key) + ': '
+            for players in value:
+                for user_name in players.values():
+                    s += user_name + ' '
+            s += '\n'
             self.teams[key] = 0
         return s
 
@@ -89,3 +96,12 @@ class HatGame:
         for key, value in self.teams.items():
             s += 'Команда ' + str(key) + ' - ' + str(value) + ' очков.' + '\n'
         return s
+
+    def get_team_number(self, user_id):
+        #team_members
+        for team_num, team in self.team_members.items():
+            for players in team:
+                for player_id in players.keys():
+                    if user_id == player_id:
+                        return team_num
+

@@ -25,7 +25,7 @@ class HatGameContainer:
         if self.get_user_game(user_id) is None:
             # if the user is not in a list of any other games,
             # add him/her into the requested game
-            self.games[game_id].reg_member(user_name)
+            self.games[game_id].reg_member(user_id, user_name)
             # add the player into list with connections player-game
             self.game_players[user_id] = game_id
         elif self.game_players[user_id] == game_id:
@@ -51,3 +51,11 @@ class HatGameContainer:
                 "любое слово не из списка команд, будет добавлено в ""шляпу""\n"
                 "отправить число = номеру команды - вытянуть слово из ""шляпы"""
                 )
+
+    def finish_game(self, user_id):
+        user_game = self.get_user_game(user_id)
+        self.game_players = {key:val for key, val in self.game_players.items() if val != user_game.game_number}
+        self.games.pop(user_game.game_number)
+
+    def get_game_players(self, game_id):
+        return list(key for key, value in self.game_players.items() if value == game_id)
