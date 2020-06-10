@@ -39,7 +39,7 @@ class HatGameContainer:
             user_game_number = self.game_players.get(user_id)
             return self.games[user_game_number]
         else:
-            return None
+            return HatGame()
 
     def get_help(self):
         """Show a list of available commands"""

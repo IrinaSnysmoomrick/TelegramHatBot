@@ -14,9 +14,13 @@ class HatGame:
         self.team_members = {}
         self.members = []
         self.team_size = 0
+        self.game_number = 0
+        self.statuses = {0: 'Старт', 1:'Регистрация', 2:'Раунд 1', 3:'Раунд 2', 4:'Раунд 3', 5:'Конец игры'}
+        self.status = 0
+
+    def init_game(self, team_size):
         self.game_number = random.randint(1,1000)
-        self.statuses = {1:'Старт', 2:'Раунд 1', 3:'Раунд 2', 4:'Раунд 3', 5:'Конец игры'}
-        self.status = 1
+        self.team_size = team_size
 
     def reg_member(self, user_id, user_name):
         """Registration a user into game"""
