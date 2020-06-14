@@ -58,6 +58,17 @@ def main():
     markupFinishGame = types.ReplyKeyboardMarkup()
     markupFinishGame.add(result, finish)
 
+    # if user_game is None:
+    #     bot.send_message(user_id, 'Создать игру', reply_markup=markupStartGame, parse_mode='markdown')
+    # elif user_game.status == 1:
+    #     bot.send_message(user_id, 'Зарегистрироваться на игру', reply_markup=markupRegistration, parse_mode='markdown')
+    # elif user_game.status > 1 and user_game.status < 5:
+    #     bot.send_message(user_id, 'Участвовать в игре', reply_markup=markupRunGame, parse_mode='markdown')
+    # elif user_game.status == 5:
+    #     bot.send_message(user_id, 'Завершить игру', reply_markup=markupFinishGame, parse_mode='markdown')
+    # else:
+    #     bot.send_message(user_id, 'Выход', reply_markup=markupFinishGame, parse_mode='markdown')
+
     @bot.message_handler(commands=['start'])
     def start_game_command(message):
         markup.add(start_game, registration)
@@ -74,80 +85,72 @@ def main():
         user_game = game_container.get_user_game(user_id)
         user_name = message.from_user.first_name
 
-        # try:
-        if message.text == 'Начать игру':
-            bot.send_message(user_id, 'Поехали! Сколько человек будет в каждой команде?')
-            logging.info(f'{user_id} - {user_name} start a game')
-            bot.register_next_step_handler(message, get_team_size)
-        elif message.text == 'Зарегистрироваться на игру':
-            bot.send_message(user_id, 'Введите номер игры.')
-            logging.info(f'{user_id} - {user_name} registration on a game')
-            bot.register_next_step_handler(message, game_registration)
-        elif message.text == 'Новый раунд':
-            logging.info(f'{user_id} - {user_name} start a new round')
-            players = game_container.get_game_players(user_game.game_number)
-            try:
+        try:
+            if message.text == 'Начать игру':
+                bot.send_message(user_id, 'Поехали! Сколько человек будет в каждой команде?')
+                logging.info(f'{user_id} - {user_name} start a game')
+                bot.register_next_step_handler(message, get_team_size)
+            elif message.text == 'Зарегистрироваться на игру':
+                bot.send_message(user_id, 'Введите номер игры.')
+                logging.info(f'{user_id} - {user_name} registration on a game')
+                bot.register_next_step_handler(message, game_registration)
+            elif message.text == 'Новый раунд':
+                logging.info(f'{user_id} - {user_name} start a new round')
+                players = game_container.get_game_players(user_game.game_number)
                 s = user_game.start_new_round()
-                for p in players:
-                    if s == 'Конец игры':
-                        bot.send_message(p, s, reply_markup=markupFinishGame, parse_mode='markdown')
-                    else:
-                        bot.send_message(p, s, reply_markup=markupRunGame, parse_mode='markdown')
-            except ValueError as err:
-                bot.send_message(user_id, err, reply_markup=markupRunGame, parse_mode='markdown')
-        elif message.text == 'Результат игры':
-            logging.info(f'{user_id} - {user_name} get the result of the game')
-            if user_game.status < 4:
-                bot.send_message(user_id, user_game.get_result(), reply_markup=markupEndRound, parse_mode='markdown')
-            else:
+                if user_game.status < 2:
+                    bot.send_message(user_id, s, reply_markup=markupAfterRegistration, parse_mode='markdown')
+                else:
+                    for p in players:
+                        if s == 'Конец игры':
+                            bot.send_message(p, s, reply_markup=markupFinishGame, parse_mode='markdown')
+                        else:
+                            bot.send_message(p, s, reply_markup=markupRunGame, parse_mode='markdown')
+            elif message.text == 'Результат игры':
+                logging.info(f'{user_id} - {user_name} get the result of the game')
+                if user_game.status < 4:
+                    bot.send_message(user_id, user_game.get_result(), reply_markup=markupEndRound, parse_mode='markdown')
+                else:
+                    players = game_container.get_game_players(user_game.game_number)
+                    for p in players:
+                        bot.send_message(p, user_game.get_result(), reply_markup=markupFinishGame, parse_mode='markdown')
+            elif message.text == 'Добавить слово':
+                logging.info(f'{user_id} - {user_name} adding a new word')
+                bot.send_message(user_id, 'Введите слово')
+                bot.register_next_step_handler(message, put_word_method)
+            elif message.text == 'Вытащить слово':
+                logging.info(f'{user_id} - {user_name} get a word from the game word list')
+                team_number = user_game.get_team_number(user_id)
+                word = user_game.get_word()
+                if word is None:
+                    players = game_container.get_game_players(user_game.game_number)
+                    for p in players:
+                        bot.send_message(p, 'Слова закончились.', reply_markup=markupEndRound, parse_mode='markdown')
+                else:
+                    keyboard = types.InlineKeyboardMarkup(row_width=2)
+                    key_ok = types.InlineKeyboardButton(text='+', callback_data=f'{word}:yes:{user_id}:{team_number}')
+                    key_cancel = types.InlineKeyboardButton(text='-', callback_data=f'{word}:no:{user_id}:{team_number}')
+                    keyboard.add(key_ok, key_cancel)
+                    bot.send_message(user_id, word, reply_markup=keyboard)
+            elif message.text == 'Завершить игру':
+                logging.info(f'{user_id} - {user_name} finish the game {user_game.game_number}')
                 players = game_container.get_game_players(user_game.game_number)
                 for p in players:
-                    bot.send_message(p, user_game.get_result(), reply_markup=markupFinishGame, parse_mode='markdown')
-        elif message.text == 'Добавить слово':
-            logging.info(f'{user_id} - {user_name} adding a new word')
-            bot.send_message(user_id, 'Введите слово')
-            bot.register_next_step_handler(message, put_word_method)
-        elif message.text == 'Вытащить слово':
-            logging.info(f'{user_id} - {user_name} get a word from the game word list')
-            team_number = user_game.get_team_number(user_id)
-            word = user_game.get_word()
-            if word is None:
-                players = game_container.get_game_players(user_game.game_number)
-                for p in players:
-                    bot.send_message(p, 'Слова закончились.', reply_markup=markupEndRound, parse_mode='markdown')
-            else:
-                keyboard = types.InlineKeyboardMarkup(row_width=2)
-                key_ok = types.InlineKeyboardButton(text='+', callback_data=f'{word}:yes:{user_id}:{team_number}')
-                key_cancel = types.InlineKeyboardButton(text='-', callback_data=f'{word}:no:{user_id}:{team_number}')
-                keyboard.add(key_ok, key_cancel)
-                bot.send_message(user_id, word, reply_markup=keyboard)
-        elif message.text == 'Завершить игру':
-            logging.info(f'{user_id} - {user_name} finish the game {user_game.game_number}')
-            players = game_container.get_game_players(user_game.game_number)
-            for p in players:
-                bot.send_message(p, 'Игра завершена', reply_markup=markupStartGame, parse_mode='markdown')
-            game_container.finish_game(user_id)
-        #else:
-        #    if user_game is None:
-        #        get_team_size(message)
-        #    else:
-        #        if message.text.isdigit() and user_game.status == 1:
-        #            game_registration(message)
-        #        elif user_game.status > 1:
-        #            put_word_method(message)
+                    bot.send_message(p, 'Игра завершена', reply_markup=markupStartGame, parse_mode='markdown')
+                game_container.finish_game(user_id)
 
-        # except Exception as exc:
-        #     logging.error(f'{user_id} - {user_name} unexpected error happened')
-        #     if user_game is None:
-        #         bot.send_message(user_id, 'Неправильный порядок действий', reply_markup=markupStartGame, parse_mode='markdown')
-        #     elif user_game.status == 1:
-        #         bot.send_message(user_id, 'Неправильный порядок действий', reply_markup=markupAfterRegistration, parse_mode='markdown')
-        #     elif user_game.status == 2:
-        #         bot.send_message(user_id, 'Неправильный порядок действий', reply_markup=markupRunGame, parse_mode='markdown')
-        #     elif user_game.status > 2 and user_game.status < 5:
-        #         bot.send_message(user_id, 'Неправильный порядок действий', reply_markup=markupEndRound, parse_mode='markdown')
-        #     elif user_game.status == 5:
-        #         bot.send_message(user_id, 'Неправильный порядок действий', reply_markup=markupFinishGame, parse_mode='markdown')
+        except Exception as exc:
+            logging.error(f'{user_id} - {user_name} unexpected error happened')
+            if user_game is None:
+                bot.send_message(user_id, 'Неправильный порядок действий', reply_markup=markupStartGame, parse_mode='markdown')
+            elif user_game.status == 1:
+                bot.send_message(user_id, 'Неправильный порядок действий', reply_markup=markupAfterRegistration, parse_mode='markdown')
+            elif user_game.status == 2:
+                bot.send_message(user_id, 'Неправильный порядок действий', reply_markup=markupRunGame, parse_mode='markdown')
+            elif user_game.status > 2 and user_game.status < 5:
+                bot.send_message(user_id, 'Неправильный порядок действий', reply_markup=markupEndRound, parse_mode='markdown')
+            elif user_game.status == 5:
+                bot.send_message(user_id, 'Неправильный порядок действий', reply_markup=markupFinishGame, parse_mode='markdown')
 
     #количество участников в каждой команде
     def get_team_size(message):

@@ -14,19 +14,15 @@ class HatGame:
         self.team_members = {}
         self.members = []
         self.team_size = 0
-        self.game_number = 0
+        self.game_number = random.randint(0,10000)
         self.statuses = {0: 'Старт', 1:'Регистрация', 2:'Раунд 1', 3:'Раунд 2', 4:'Раунд 3', 5:'Конец игры'}
         self.status = 0
-
-    def init_game(self, team_size):
-        self.game_number = random.randint(1,1000)
-        self.team_size = team_size
 
     def reg_member(self, user_id, user_name):
         """Registration a user into game"""
         for m in self.members:
             if user_id in m.keys():
-                raise ValueError('Участник уже добавлен в игру.')
+                return 'Участник уже добавлен в игру.'
         else:
             self.members.append({user_id:user_name})
             return 'Участник добавлен в игру!'
@@ -34,15 +30,15 @@ class HatGame:
     def start_new_round(self):
         """Start new rownd - exchange values from list of used words to word list"""
         if len(self.words) == 0:
-            raise ValueError('Список слов для игры пуст.')
+            return 'Список слов для игры пуст.'
         self.round_words = self.words.copy()
         if len(self.members) == 0:
-            raise ValueError('Нет зарегистрированных участников игры.')
+            return 'Нет зарегистрированных участников игры.'
         elif self.status > 4:
-            raise ValueError('Все раунды игры уже пройдены.')
+            return 'Все раунды игры уже пройдены.'
         elif len(self.team_members) == 0:
             teams = (self.get_teams())
-            self.status += 1
+            self.status = 2
             return f'{self.statuses[self.status]}\n{teams}'
         else:
             self.status += 1
@@ -54,7 +50,7 @@ class HatGame:
         cnt = len(self.members)
         l = []
         if cnt < 2:
-            raise ValueError('На игру зарегистрировалось меньше 2 человек.')
+            return 'На игру зарегистрировалось меньше 2 человек.'
         for i in range(0, cnt - 1, self.team_size):
             if cnt - i == self.team_size + 1:
                 l.append(self.members[i:i + self.team_size + 1])
@@ -74,7 +70,7 @@ class HatGame:
     def add_word(self, word):
         """Adding a new word into the word list"""
         if word in self.words:
-            raise ValueError('Такое слово уже есть в шляпе.')
+            return 'Такое слово уже есть в шляпе.'
         else:
             self.words.append(word)
             return 'Слово успешно добавлено.'

@@ -19,9 +19,9 @@ class HatGameContainer:
     def reg_player(self, user_id, game_id, user_name):
         """Add a new player into list of members"""
         if game_id not in self.games.keys():
-            raise ValueError('Игра с таким номером не создана.')
+            return 'Игра с таким номером не создана.'
         if self.games[game_id].status > 1:
-            raise ValueError('Этап регистрации на игру уже завершен.')
+            return 'Этап регистрации на игру уже завершен.'
         if self.get_user_game(user_id) is None:
             # if the user is not in a list of any other games,
             # add him/her into the requested game
@@ -29,9 +29,9 @@ class HatGameContainer:
             # add the player into list with connections player-game
             self.game_players[user_id] = game_id
         elif self.game_players[user_id] == game_id:
-            raise ValueError('Участник уже зарегистрирован на этой игре.')
+            return 'Участник уже зарегистрирован на этой игре.'
         else:
-            raise ValueError(f'Участник уже зарегистрирован на игре {self.game_players[user_id]}.')
+            return f'Участник уже зарегистрирован на игре {self.game_players[user_id]}.'
 
     def get_user_game(self, user_id):
         """Get a game by user_id"""
@@ -39,7 +39,7 @@ class HatGameContainer:
             user_game_number = self.game_players.get(user_id)
             return self.games[user_game_number]
         else:
-            return HatGame()
+            return None
 
     def get_help(self):
         """Show a list of available commands"""
